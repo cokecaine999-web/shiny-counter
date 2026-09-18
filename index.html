@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shiny Tracker Pro - Cloud & Backup Edition</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #ff4a4a;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+            --odds-bg: #292929;
+            --server-active: #44cf7c;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 10px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 100vh; box-sizing: border-box;
+        }
+        .container {
+            width: 100%; max-width: 380px;
+            background-color: var(--card-bg); border-radius: 20px;
+            padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center; box-sizing: border-box;
+        }
+        .server-status-bar {
+            background-color: #151515; border-radius: 8px;
+            padding: 8px 12px; margin-bottom: 12px;
+            font-size: 11px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #333;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background-color: #44cf7c; display: inline-block;
+            box-shadow: 0 0 8px #44cf7c;
+        }
+        .menu-select, .search-input {
+            width: 100%; background: #2a2a2a; color: white;
+            border: 1px solid #444; padding: 12px; border-radius: 8px;
+            margin-bottom: 10px; font-size: 14px; font-weight: 600;
+            box-sizing: border-box;
+        }
+        .config-section {
+            background: #252525; border-radius: 10px;
+            padding: 12px; margin-bottom: 12px; text-align: left;
+            border: 1px solid #3d3d3d;
+        }
+        .config-label { font-size: 11px; color: var(--text-secondary); font-weight: bold; display: block; margin-bottom: 4px; }
+        .server-box-input {
+            width: 100%; background: #151515; border: 1px solid #444;
+            color: #fff; padding: 8px; border-radius: 5px;
+            font-size: 12px; box-sizing: border-box; margin-bottom: 10px;
+        }
+        .backup-btn-row { display: flex; gap: 8px; }
+        .backup-action-btn {
+            background-color: #1a3a2a; color: #44cf7c; border: 1px solid #2a5a3a;
+            border-radius: 6px; padding: 8px; font-size: 12px; flex: 1; font-weight: 600; cursor: pointer;
+        }
+        optgroup { background: #1e1e1e; color: #ff4a4a; font-weight: bold; }
+        option { color: white; }
+        .odds-display-box {
+            background-color: var(--odds-bg); border: 1px dashed #555;
+            border-radius: 10px; padding: 10px; margin-bottom: 12px;
+            font-size: 14px; font-weight: bold; color: #44cf7c;
+        }
+        .checkbox-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); }
+        .image-container {
+            width: 110px; height: 110px; margin: 5px auto 12px auto;
+            border-radius: 15px; border: 2px dashed #444;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; background-color: #151515;
+        }
+        .image-container img { width: 100%; height: 100%; object-fit: contain; }
+        .file-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; padding: 4px 0; cursor: pointer; }
+        #file-input { display: none; }
+        .counter-display { font-size: 64px; font-weight: 800; margin: 5px 0; font-variant-numeric: tabular-nums; }
+        .main-btn {
+            background-color: var(--accent-color); color: white; border: none;
+            border-radius: 50%; width: 120px; height: 120px; font-size: 40px;
+            font-weight: bold; cursor: pointer; box-shadow: 0 6px 15px rgba(255, 74, 74, 0.4);
+            margin: 5px 0; transition: transform 0.1s ease; -webkit-tap-highlight-color: transparent;
+        }
+        .main-btn:active { transform: scale(0.92); }
+        .setting-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 10px 0; font-size: 14px; color: var(--text-secondary); }
+        .inc-input { width: 55px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 5px; padding: 5px; text-align: center; font-weight: bold; }
+        .control-row { display: flex; gap: 10px; margin-top: 10px; }
+        .sub-btn { background-color: #2a2a2a; color: var(--text-color); border: none; border-radius: 10px; padding: 10px; flex: 1; font-size: 13px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="server-status-bar">
+        <span style="color: var(--text-secondary);">STATUS:</span>
+        <span id="status-text" style="color: #44cf7c; display: flex; align-items: center; gap: 6px;">
+            <span class="status-dot" id="sync-dot"></span> READY
+        </span>
+    </div>
+
+    <!-- Google Server Management -->
+    <div class="config-section">
+        <label class="config-label">GOOGLE WEB APP ENDPOINT URL</label>
+        <input type="text" id="server-url" class="server-box-input" placeholder="Paste Google Script URL here..." onchange="saveData()">
+        
+        <label class="config-label">💾 BACKUP & STORAGE</label>
+        <div class="backup-btn-row">
+            <button class="backup-action-btn" onclick="exportData()">📤 Export (.json)</button>
+            <button class="backup-action-btn" onclick="importData()" style="color:#d4af37; background:#3a321a; border-color:#5a4a2a;">📥 Import File</button>
+        </div>
+    </div>
+
+    <select id="game-select" class="menu-select" onchange="onGameChange(); saveData();">
+        <option value="lpza">Legends: Z-A (Gen 9)</option>
+        <option value="scvi">Scarlet / Violet (Gen 9)</option>
+        <option value="la">Legends: Arceus (Gen 8)</option>
+        <option value="swsh">Sword / Shield (Gen 8)</option>
+        <option value="gsc">Gold / Silver / Crystal (Gen 2)</option>
+    </select>
+
+    <input type="text" id="pokemon-search" class="search-input" placeholder="Pokémon Target..." oninput="saveData()">
+
+    <select id="method-select" class="menu-select" onchange="calculateOdds(); saveData();">
+        <optgroup label="🧬 Breeding Methods">
+            <option value="masuda" data-base="683" data-charm="512">Masuda Method</option>
+            <option value="shiny_parent" data-base="64" data-charm="64">Shiny Parent Breeding (Gen 2)</option>
+        </optgroup>
+        <optgroup label="🗺️ Overworld & Map Manipulation">
+            <option value="outbreak" data-base="1365" data-charm="512">Mass Outbreaks (60+ Clears)</option>
+            <option value="sandwich" data-base="1024" data-charm="683">Sparkling Power Sandwiches</option>
+        </optgroup>
+    </select>
+
+    <div class="checkbox-row" id="charm-row">
+        <input type="checkbox" id="shiny-charm-checkbox" onchange="calculateOdds(); saveData();">
+        <label for="shiny-charm-checkbox">Possess Shiny Charm?</label>
+    </div>
+
+    <div class="odds-display-box" id="odds-box">Current Hunting Odds: 1 / 4096</div>
+    
+    <div class="image-container">
+        <span id="placeholder-text" style="color: var(--text-secondary); font-size: 11px; padding: 5px;">No Target Selected</span>
+        <img id="target-img" style="display:none;">
+        <label for="file-input" class="file-label">Choose Picture</label>
+        <input type="file" id="file-input" accept="image/*" onchange="loadImage(event)">
+    </div>
+
+    <div class="counter-display" id="counter">0</div>
+    
+    <button class="main-btn" id="plus-btn" onclick="increment()">+</button>
+    
+    <div class="setting-row">
+        <span>Step Size:</span>
+        <input type="number" id="inc-value" class="inc-input" value="1" min="1" oninput="updateIncrement()">
+    </div>
+    
+    <div class="control-row">
+        <button class="sub-btn" onclick="decrement()">Minus</button>
+        <button class="sub-btn" onclick="resetCount()" style="color: #ff4a4a;">Reset</button>
+    </div>
+</div>
+
+<script>
+    let count = 0;
+    let incrementAmt = 1;
+
+    window.onload = function() {
+        if (localStorage.getItem('shiny_count')) {
+            count = parseInt(localStorage.getItem('shiny_count'));
+            document.getElementById('counter').innerText = count;
+        }
+        if (localStorage.getItem('shiny_game')) document.getElementById('game-select').value = localStorage.getItem('shiny_game');
+        if (localStorage.getItem('shiny_server_url')) document.getElementById('server-url').value = localStorage.getItem('shiny_server_url');
+        onGameChange();
+        if (localStorage.getItem('shiny_method_val')) document.getElementById('method-select').value = localStorage.getItem('shiny_method_val');
+        if (localStorage.getItem('shiny_charm_checked')) document.getElementById('shiny-charm-checkbox').checked = localStorage.getItem('shiny_charm_checked') === 'true';
+        if (localStorage.getItem('shiny_pkmn_search')) document.getElementById('pokemon-search').value = localStorage.getItem('shiny_pkmn_search');
+        if (localStorage.getItem('shiny_inc')) {
+            incrementAmt = parseInt(localStorage.getItem('shiny_inc')) || 1;
+            document.getElementById('inc-value').value = incrementAmt;
+            document.getElementById('plus-btn').innerText = "+" + (incrementAmt > 1 ? incrementAmt : "");
+        }
